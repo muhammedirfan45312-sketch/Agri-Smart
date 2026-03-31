@@ -1,20 +1,59 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Agri-Smart Kerala
 
-# Run and deploy your AI Studio app
+## Problem Statement
+Farmers in Kerala often struggle with a lack of localized, data-driven agricultural advice. General farming guidelines frequently fail to account for the unique micro-climates, specific soil variations at a plot level, and the rapidly changing real-time weather conditions across the state. This information gap leads to sub-optimal crop selection, inefficient resource use, and lower yields for small-scale and commercial farmers alike.
 
-This contains everything you need to run your app locally.
+## Project Description
+**Agri-Smart Kerala** is a precision agriculture platform designed to empower farmers with hyper-localized intelligence. 
 
-View your app in AI Studio: https://ai.studio/apps/d51fc2a0-a0c0-4a79-ae01-1f2dcb928fa9
+### How it works:
+1.  **Interactive Mapping**: Users select their specific plot on an immersive map of Kerala.
+2.  **Scale Customization**: A dynamic "Farmable Area" tool allows users to define the exact radius of their land (from 100m to 5km).
+3.  **Environmental Integration**: The system automatically fetches real-time local weather data, including temperature, humidity, and precipitation levels.
+4.  **AI Analysis**: Using the Gemini 3 Flash model, the app synthesizes coordinates, land scale, and weather data to generate a structured agricultural report.
 
-## Run Locally
+### Key Features:
+*   **Suitability Scoring**: Instant assessment of a plot's agricultural productivity.
+*   **Soil & Terrain Analysis**: Localized descriptions of the land's physical characteristics.
+*   **Smart Crop Recommendations**: Tailored suggestions for cash crops and food crops based on current conditions and scale.
+*   **Expert Tips**: Actionable, professional advice for farming success in the specific region.
 
-**Prerequisites:**  Node.js
+## Google AI Usage
+### Tools / Models Used
+*   **Gemini 3 Flash (`gemini-3-flash-preview`)**: The core reasoning engine used for generating structured agricultural insights.
+*   **Google Maps JavaScript API**: Provides the interactive geo-spatial interface for location selection and area visualization.
 
+### How Google AI Was Used
+Gemini AI is integrated as a "Virtual Agricultural Expert." It doesn't just provide static text; it performs a multi-factor analysis:
+*   **Geo-Spatial Reasoning**: It interprets the specific Latitude/Longitude to understand the regional geography of Kerala (Highlands, Midlands, or Lowlands).
+*   **Contextual Synthesis**: It combines the user-defined farm radius and real-time weather metrics to refine its recommendations (e.g., suggesting different irrigation strategies for high-humidity days or different crops for larger-scale plots).
+*   **Structured Output**: We utilize Gemini's JSON schema capabilities to ensure the insights are delivered in a clean, structural format that powers our high-end UI components.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Proof of Google AI Usage
+Attach screenshots in a `/proof` folder:
+
+### AI Proof
+*   [Link to AI interaction screenshot/log if applicable]
+
+### Screenshots
+*   **Screenshot1**: Map view with Farmable Area circle and radius control.
+*   **Screenshot2**: Structured Insights panel showing weather, suitability score, and crop cards.
+
+### Demo Video
+[Watch Demo](https://drive.google.com/file/d/your-video-id/view) *(Replace with your actual Google Drive link)*
+
+## Installation Steps
+
+```bash
+# Clone the repository
+git clone <your-repo-link>
+
+# Go to project folder
+cd agri-smart-kerala
+
+# Install dependencies
+npm install
+
+# Run the project
+npm run dev
+```
