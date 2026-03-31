@@ -63,21 +63,49 @@ const AIPanel: React.FC<AIPanelProps> = ({ data }) => {
           </div>
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <div className="mb-8 p-5 bg-white/40 rounded-3xl border border-white/60 flex items-center justify-between group">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-olive shadow-sm group-hover:scale-110 transition-transform">
-                  <MapPin size={18} />
+            <div className="mb-8 p-5 bg-white/40 rounded-3xl border border-white/60 flex flex-col gap-4 group">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-olive shadow-sm group-hover:scale-110 transition-transform">
+                    <MapPin size={18} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-sans font-bold text-olive/40 uppercase tracking-widest">Selected Coordinates</p>
+                    <p className="text-sm font-sans font-bold text-sage-900">
+                      {data.lat.toFixed(4)}°N, {data.lng.toFixed(4)}°E
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-sans font-bold text-olive/40 uppercase tracking-widest">Selected Coordinates</p>
-                  <p className="text-sm font-sans font-bold text-sage-900">
-                    {data.lat.toFixed(4)}°N, {data.lng.toFixed(4)}°E
-                  </p>
+                <div className="text-[10px] font-sans font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-100">
+                  LOCALIZED
                 </div>
               </div>
-              <div className="text-[10px] font-sans font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                LOCALIZED
-              </div>
+
+              {data.weather && (
+                <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/60">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex items-center gap-2 text-olive/60">
+                      <Sun size={12} />
+                      <span className="text-[8px] font-sans font-black uppercase tracking-tighter">Temp</span>
+                    </div>
+                    <p className="text-sm font-sans font-bold text-sage-900">{data.weather.temperature}°C</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 border-x border-white/60">
+                    <div className="flex items-center gap-2 text-olive/60">
+                      <Droplets size={12} />
+                      <span className="text-[8px] font-sans font-black uppercase tracking-tighter">Humidity</span>
+                    </div>
+                    <p className="text-sm font-sans font-bold text-sage-900">{data.weather.humidity}%</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex items-center gap-2 text-olive/60">
+                      <Wind size={12} />
+                      <span className="text-[8px] font-sans font-black uppercase tracking-tighter">Precip</span>
+                    </div>
+                    <p className="text-sm font-sans font-bold text-sage-900">{data.weather.precipitation}mm</p>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="markdown-body">

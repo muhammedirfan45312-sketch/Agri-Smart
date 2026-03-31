@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Leaf, Globe, Info } from 'lucide-react';
 
 export default function App() {
+  const [radius, setRadius] = useState(500);
   const [advice, setAdvice] = useState<FarmAdvice>({
     lat: 0,
     lng: 0,
@@ -16,17 +17,28 @@ export default function App() {
   });
 
   const getAdvice = async (lat: number, lng: number) => {
-    setAdvice(prev => ({ ...prev, lat, lng, loading: true, error: null }));
+    setAdvice(prev => ({ ...prev, lat, lng, loading: true, error: null, weather: undefined }));
 
     try {
+      // Fetch Weather Data first to include in AI prompt
+      const weatherRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,precipitation&timezone=auto`
+      ).then(res => res.json()).catch(() => null);
+
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const model = "gemini-3-flash-preview";
       
-      const prompt = `Act as an expert Kerala agriculturalist. I am at coordinates Latitude: ${lat}, Longitude: ${lng} in Kerala. 
+      const prompt = `Act as an expert Kerala agriculturalist. I am analyzing a farmable area at coordinates Latitude: ${lat}, Longitude: ${lng} in Kerala. 
+      The area being considered is a circle with a radius of ${radius} meters.
+      Current Local Weather:
+      - Temperature: ${weatherRes?.current?.temperature_2m}°C
+      - Humidity: ${weatherRes?.current?.relative_humidity_2m}%
+      - Precipitation: ${weatherRes?.current?.precipitation}mm
+      
       Provide a detailed analysis in Markdown format:
-      1. **Soil & Terrain**: Describe the likely soil type and terrain.
-      2. **Recommended Crops**: Suggest 2-3 best cash crops or food crops for this specific location.
-      3. **Expert Farming Tip**: Provide one key tip for success in this area.
+      1. **Soil & Terrain**: Describe the likely soil type and terrain for this specific area.
+      2. **Recommended Crops**: Suggest 2-3 best cash crops or food crops for this location, scale, and current weather conditions.
+      3. **Expert Farming Tip**: Provide one key tip for success in this area, considering the current weather.
       Keep the tone professional yet approachable. Use bullet points for readability.`;
 
       const response = await ai.models.generateContent({
@@ -34,10 +46,17 @@ export default function App() {
         contents: [{ parts: [{ text: prompt }] }],
       });
 
+      const weather = weatherRes ? {
+        temperature: weatherRes.current.temperature_2m,
+        humidity: weatherRes.current.relative_humidity_2m,
+        precipitation: weatherRes.current.precipitation,
+      } : undefined;
+
       setAdvice(prev => ({
         ...prev,
         advice: response.text || 'No advice received.',
-        loading: false
+        loading: false,
+        weather
       }));
     } catch (err) {
       console.error('Gemini Error:', err);
@@ -112,6 +131,8 @@ export default function App() {
             <Map 
               onLocationSelect={getAdvice} 
               selectedLocation={advice.lat ? { lat: advice.lat, lng: advice.lng } : null} 
+              radius={radius}
+              onRadiusChange={setRadius}
             />
           </motion.div>
 

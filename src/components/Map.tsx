@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, Circle } from '@react-google-maps/api';
 import { motion, AnimatePresence } from 'motion/react';
+import { Settings2 } from 'lucide-react';
 
 const containerStyle = {
   width: '100%',
@@ -15,9 +16,11 @@ const center = {
 interface MapProps {
   onLocationSelect: (lat: number, lng: number) => void;
   selectedLocation: { lat: number, lng: number } | null;
+  radius: number;
+  onRadiusChange: (radius: number) => void;
 }
 
-const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation }) => {
+const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation, radius, onRadiusChange }) => {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: "AIzaSyD84Egptlb3r4xYDxHvxgJ7sX3Smb7LV74"
@@ -112,12 +115,71 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation }) => {
         }}
       >
         {selectedLocation && (
-          <Marker 
-            position={selectedLocation}
-            animation={google.maps.Animation.DROP}
-          />
+          <>
+            <Marker 
+              position={selectedLocation}
+              animation={google.maps.Animation.DROP}
+            />
+            <Circle
+              center={selectedLocation}
+              radius={radius}
+              options={{
+                fillColor: "#5A5A40",
+                fillOpacity: 0.2,
+                strokeColor: "#5A5A40",
+                strokeOpacity: 0.5,
+                strokeWeight: 2,
+                clickable: false,
+                editable: false,
+                zIndex: 1
+              }}
+            />
+          </>
         )}
       </GoogleMap>
+
+      {/* Radius Control UI */}
+      <AnimatePresence>
+        {selectedLocation && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="absolute top-6 left-6 z-20"
+          >
+            <div className="bg-white/90 backdrop-blur-md p-6 rounded-[32px] border border-olive/10 shadow-xl w-64">
+              <div className="flex items-center gap-3 mb-4">
+                <Settings2 size={16} className="text-olive" />
+                <h3 className="text-[10px] font-sans font-black text-olive uppercase tracking-widest">
+                  Farmable Area
+                </h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <span className="text-[10px] font-sans font-bold text-olive/40 uppercase tracking-wider">Radius</span>
+                  <span className="text-lg font-serif font-bold text-sage-900">{radius}m</span>
+                </div>
+                
+                <input
+                  type="range"
+                  min="100"
+                  max="5000"
+                  step="100"
+                  value={radius}
+                  onChange={(e) => onRadiusChange(Number(e.target.value))}
+                  className="w-full h-1.5 bg-olive/10 rounded-full appearance-none cursor-pointer accent-olive"
+                />
+                
+                <div className="flex justify-between text-[8px] font-sans font-black text-olive/20 uppercase tracking-tighter">
+                  <span>100m</span>
+                  <span>5km</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Pulsating Indicator Tooltip */}
       <AnimatePresence>
