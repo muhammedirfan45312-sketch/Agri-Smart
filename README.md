@@ -47,7 +47,7 @@ The entire development lifecycle of **Agri-Smart Kerala** was powered by Google 
 ![Screenshot 2](./proof/screenshot2.png)
 
 ### Demo Video
-[Watch Demo](https://drive.google.com/file/d/your-video-id/view) *(Replace with your actual Google Drive link)*
+[Watch Demo](https://drive.google.com/file/d/10d2HCYUwCRnIUZzbMsPpk5arNW9QQwGY/view?usp=sharing)
 
 ## Installation Steps
 
