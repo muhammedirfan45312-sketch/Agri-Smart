@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import Map from './components/Map';
 import AIPanel from './components/AIPanel';
-import { FarmAdvice } from './types';
+import { FarmAdvice, StructuredAdvice } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Leaf, Globe, Info } from 'lucide-react';
 
@@ -11,7 +11,7 @@ export default function App() {
   const [advice, setAdvice] = useState<FarmAdvice>({
     lat: 0,
     lng: 0,
-    advice: '',
+    advice: null,
     loading: false,
     error: null
   });
@@ -35,16 +35,47 @@ export default function App() {
       - Humidity: ${weatherRes?.current?.relative_humidity_2m}%
       - Precipitation: ${weatherRes?.current?.precipitation}mm
       
-      Provide a detailed analysis in Markdown format:
-      1. **Soil & Terrain**: Describe the likely soil type and terrain for this specific area.
-      2. **Recommended Crops**: Suggest 2-3 best cash crops or food crops for this location, scale, and current weather conditions.
-      3. **Expert Farming Tip**: Provide one key tip for success in this area, considering the current weather.
-      Keep the tone professional yet approachable. Use bullet points for readability.`;
+      Provide a detailed analysis of the location.`;
 
       const response = await ai.models.generateContent({
         model,
         contents: [{ parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              soilAndTerrain: {
+                type: Type.STRING,
+                description: "Description of the likely soil type and terrain."
+              },
+              recommendedCrops: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    reason: { type: Type.STRING }
+                  },
+                  required: ["name", "reason"]
+                },
+                description: "List of 2-3 best crops for this location."
+              },
+              expertTip: {
+                type: Type.STRING,
+                description: "One key expert tip for success in this area."
+              },
+              suitabilityScore: {
+                type: Type.INTEGER,
+                description: "A score from 0-100 representing the agricultural suitability of this plot."
+              }
+            },
+            required: ["soilAndTerrain", "recommendedCrops", "expertTip", "suitabilityScore"]
+          }
+        }
       });
+
+      const structuredAdvice = JSON.parse(response.text) as StructuredAdvice;
 
       const weather = weatherRes ? {
         temperature: weatherRes.current.temperature_2m,
@@ -54,7 +85,7 @@ export default function App() {
 
       setAdvice(prev => ({
         ...prev,
-        advice: response.text || 'No advice received.',
+        advice: structuredAdvice,
         loading: false,
         weather
       }));

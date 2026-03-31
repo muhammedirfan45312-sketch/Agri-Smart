@@ -1,3 +1,15 @@
+export interface CropSuggestion {
+  name: string;
+  reason: string;
+}
+
+export interface StructuredAdvice {
+  soilAndTerrain: string;
+  recommendedCrops: CropSuggestion[];
+  expertTip: string;
+  suitabilityScore: number;
+}
+
 export interface WeatherData {
   temperature: number;
   humidity: number;
@@ -7,7 +19,7 @@ export interface WeatherData {
 export interface FarmAdvice {
   lat: number;
   lng: number;
-  advice: string;
+  advice: StructuredAdvice | null;
   loading: boolean;
   error: string | null;
   weather?: WeatherData;

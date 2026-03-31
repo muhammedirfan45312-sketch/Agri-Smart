@@ -197,24 +197,26 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation, radius, o
               zIndex: 30,
               transform: 'translate(-50%, -50%)' 
             }}
-            className="flex flex-col items-center gap-3"
+            className="flex items-center justify-center"
           >
+            {/* The Dot (Centered on cursor) */}
             <div className="relative flex items-center justify-center">
               <motion.div 
-                animate={{ scale: [1, 2, 1], opacity: [0.4, 0, 0.4] }}
+                animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0, 0.3] }}
                 transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                className="absolute w-8 h-8 bg-olive rounded-full"
+                className="absolute w-6 h-6 bg-olive rounded-full"
               />
-              <div className="w-3 h-3 bg-olive rounded-full border-2 border-white shadow-lg relative z-10" />
+              <div className="w-2 h-2 bg-olive rounded-full border border-white shadow-lg relative z-10" />
             </div>
             
+            {/* The Text (Floating just above the dot) */}
             <motion.div 
-              initial={{ y: 5 }}
-              animate={{ y: 0 }}
-              className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-olive/10 shadow-2xl whitespace-nowrap"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute bottom-full mb-0.5 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-xl border border-olive/10 shadow-2xl whitespace-nowrap"
             >
-              <p className="text-[10px] font-sans font-black text-olive uppercase tracking-[0.15em]">
-                Click to get farm advice
+              <p className="text-[8px] font-sans font-black text-olive uppercase tracking-[0.05em]">
+                Click for advice
               </p>
             </motion.div>
           </motion.div>

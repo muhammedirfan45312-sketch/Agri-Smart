@@ -1,7 +1,7 @@
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Sprout, Loader2, MapPin, Wind, Droplets, Sun } from 'lucide-react';
+import { Sprout, Loader2, MapPin, Wind, Droplets, Sun, Mountain, CheckCircle2, Lightbulb, Gauge } from 'lucide-react';
 import { FarmAdvice } from '../types';
+import { motion } from 'motion/react';
 
 interface AIPanelProps {
   data: FarmAdvice;
@@ -23,14 +23,6 @@ const AIPanel: React.FC<AIPanelProps> = ({ data }) => {
             <p className="text-[10px] text-olive/60 uppercase tracking-[0.2em] font-sans font-bold">Kerala Agricultural AI</p>
           </div>
         </div>
-        
-        {data.lat !== 0 && !data.loading && (
-          <div className="flex gap-2">
-            <div className="w-8 h-8 rounded-full bg-sage-100 flex items-center justify-center text-olive/40"><Sun size={14} /></div>
-            <div className="w-8 h-8 rounded-full bg-sage-100 flex items-center justify-center text-olive/40"><Droplets size={14} /></div>
-            <div className="w-8 h-8 rounded-full bg-sage-100 flex items-center justify-center text-olive/40"><Wind size={14} /></div>
-          </div>
-        )}
       </div>
 
       <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar relative z-10">
@@ -61,9 +53,10 @@ const AIPanel: React.FC<AIPanelProps> = ({ data }) => {
               Retry Connection
             </button>
           </div>
-        ) : (
-          <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <div className="mb-8 p-5 bg-white/40 rounded-3xl border border-white/60 flex flex-col gap-4 group">
+        ) : data.advice && (
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 space-y-6">
+            {/* Header Info Card */}
+            <div className="p-5 bg-white/40 rounded-3xl border border-white/60 flex flex-col gap-4 group">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-olive shadow-sm group-hover:scale-110 transition-transform">
@@ -107,9 +100,70 @@ const AIPanel: React.FC<AIPanelProps> = ({ data }) => {
                 </div>
               )}
             </div>
-            
-            <div className="markdown-body">
-              <ReactMarkdown>{data.advice}</ReactMarkdown>
+
+            {/* Suitability Score */}
+            <div className="p-6 bg-olive/5 rounded-3xl border border-olive/10 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-olive shadow-sm">
+                  <Gauge size={24} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-sans font-black text-olive/40 uppercase tracking-widest">Suitability Score</p>
+                  <p className="text-2xl font-bold text-sage-900">Highly Productive</p>
+                </div>
+              </div>
+              <div className="text-4xl font-black text-olive/20">
+                {data.advice.suitabilityScore}%
+              </div>
+            </div>
+
+            {/* Soil & Terrain */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 px-2">
+                <Mountain size={14} className="text-olive" />
+                <h3 className="text-[10px] font-sans font-black text-olive uppercase tracking-widest">Soil & Terrain</h3>
+              </div>
+              <div className="p-6 bg-white/40 rounded-3xl border border-white/60 text-sage-900/80 font-serif leading-relaxed italic">
+                {data.advice.soilAndTerrain}
+              </div>
+            </div>
+
+            {/* Recommended Crops */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 px-2">
+                <CheckCircle2 size={14} className="text-olive" />
+                <h3 className="text-[10px] font-sans font-black text-olive uppercase tracking-widest">Recommended Crops</h3>
+              </div>
+              <div className="grid gap-3">
+                {data.advice.recommendedCrops.map((crop, idx) => (
+                  <motion.div 
+                    key={idx}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * idx }}
+                    className="p-5 bg-white/60 rounded-3xl border border-white/80 group hover:border-olive/20 transition-colors"
+                  >
+                    <h4 className="text-lg font-bold text-sage-900 mb-1 group-hover:text-olive transition-colors">{crop.name}</h4>
+                    <p className="text-sm text-sage-900/60 leading-relaxed">{crop.reason}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Expert Tip */}
+            <div className="p-6 bg-sage-900 text-white rounded-[32px] shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/10 transition-colors" />
+              <div className="flex items-start gap-4 relative z-10">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                  <Lightbulb size={20} className="text-olive" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-sans font-black text-white/40 uppercase tracking-widest mb-2">Expert Farming Tip</p>
+                  <p className="text-sm font-serif italic leading-relaxed text-white/90">
+                    "{data.advice.expertTip}"
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
