@@ -1,5 +1,7 @@
 # Agri-Smart Kerala
 
+**Live Demo:** [View App on Google AI Studio](https://ai.studio/apps/d51fc2a0-a0c0-4a79-ae01-1f2dcb928fa9)
+
 ## Problem Statement
 Farmers in Kerala often struggle with a lack of localized, data-driven agricultural advice. General farming guidelines frequently fail to account for the unique micro-climates, specific soil variations at a plot level, and the rapidly changing real-time weather conditions across the state. This information gap leads to sub-optimal crop selection, inefficient resource use, and lower yields for small-scale and commercial farmers alike.
 
