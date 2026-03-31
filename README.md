@@ -40,8 +40,8 @@ The entire development lifecycle of **Agri-Smart Kerala** was powered by Google 
 *Refer to the `/proof` folder for screenshots of the AI interaction logs and development history.*
 
 ### Screenshots
-*   **Screenshot1**: Map view with Farmable Area circle and radius control.
-*   **Screenshot2**: Structured Insights panel showing weather, suitability score, and crop cards.
+*   **Screenshot 1: Precision Analysis View** - Shows the interactive map with the "Farmable Area" radius set to 2200m. The Insights panel displays real-time weather (30.6°C), localized coordinates, and a high-productivity suitability score of 85%.
+*   **Screenshot 2: Satellite Terrain Mapping** - Demonstrates the satellite view mode, allowing farmers to visualize the actual vegetation and terrain of the selected plot while receiving structured AI advice.
 
 ### Demo Video
 [Watch Demo](https://drive.google.com/file/d/your-video-id/view) *(Replace with your actual Google Drive link)*
