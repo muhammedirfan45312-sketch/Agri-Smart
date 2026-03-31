@@ -1,0 +1,5 @@
+{
+  "name": "Agri-Smart Kerala",
+  "description": "AI-powered agricultural insights for Kerala farmers using Google Maps and Gemini.",
+  "requestFramePermissions": ["geolocation"]
+}
