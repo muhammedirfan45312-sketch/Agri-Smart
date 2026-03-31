@@ -72,6 +72,11 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation }) => {
         options={{
           disableDefaultUI: true,
           zoomControl: true,
+          mapTypeControl: true, // Added Satellite View Control
+          mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+            position: google.maps.ControlPosition.TOP_RIGHT,
+          },
           styles: [
             {
               featureType: "all",
@@ -154,8 +159,8 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation }) => {
         )}
       </AnimatePresence>
 
-      {/* Map Overlay Controls Hint (Static) */}
-      <div className="absolute bottom-6 left-6 z-20 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-olive/10 shadow-sm opacity-40 group-hover:opacity-100 transition-opacity duration-500">
+      {/* Map Overlay Controls Hint (Static) - Moved to Bottom Right to avoid search bar */}
+      <div className="absolute bottom-6 right-6 z-20 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-olive/10 shadow-sm opacity-40 group-hover:opacity-100 transition-opacity duration-500">
         <p className="text-[10px] font-sans font-black text-olive/60 uppercase tracking-widest">
           Kerala Plot Analysis
         </p>

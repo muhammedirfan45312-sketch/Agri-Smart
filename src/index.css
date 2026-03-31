@@ -55,7 +55,3 @@
 .custom-scrollbar::-webkit-scrollbar-track {
   @apply bg-transparent;
 }
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-olive/10 rounded-full hover:bg-olive/20;
-}
