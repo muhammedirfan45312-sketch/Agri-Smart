@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import Map from './components/Map';
 import AIPanel from './components/AIPanel';
-import { FarmAdvice, StructuredAdvice } from './types';
+import { FarmAdvice, StructuredAdvice, DetailedCropInfo } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Leaf, Globe, Info } from 'lucide-react';
 
@@ -13,6 +13,16 @@ export default function App() {
     lng: 0,
     advice: null,
     loading: false,
+    error: null
+  });
+
+  const [cropDetails, setCropDetails] = useState<{
+    loading: boolean;
+    data: DetailedCropInfo | null;
+    error: string | null;
+  }>({
+    loading: false,
+    data: null,
     error: null
   });
 
@@ -99,6 +109,44 @@ export default function App() {
     }
   };
 
+  const getCropDetails = async (cropName: string) => {
+    setCropDetails({ loading: true, data: null, error: null });
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const model = "gemini-3-flash-preview";
+      
+      const prompt = `Provide detailed agricultural information for the crop: ${cropName} in the context of Kerala, India.`;
+
+      const response = await ai.models.generateContent({
+        model,
+        contents: [{ parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              plantingSeason: { type: Type.STRING },
+              waterRequirements: { type: Type.STRING },
+              fertilizerNeeds: { type: Type.STRING },
+              commonPests: { type: Type.STRING },
+              harvestTime: { type: Type.STRING },
+              marketDemand: { type: Type.STRING }
+            },
+            required: ["name", "plantingSeason", "waterRequirements", "fertilizerNeeds", "commonPests", "harvestTime", "marketDemand"]
+          }
+        }
+      });
+
+      const details = JSON.parse(response.text) as DetailedCropInfo;
+      setCropDetails({ loading: false, data: details, error: null });
+    } catch (err) {
+      console.error('Gemini Error (Crop Details):', err);
+      setCropDetails({ loading: false, data: null, error: 'Failed to fetch crop details.' });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Immersive Background Elements */}
@@ -107,22 +155,22 @@ export default function App() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-olive/5 rounded-full blur-[120px]" />
       </div>
 
-      <header className="relative z-10 px-6 pt-12 md:px-12 md:pt-16 max-w-[1600px] mx-auto w-full">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+      <header className="relative z-10 px-6 pt-8 md:px-12 md:pt-16 max-w-[1600px] mx-auto w-full">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 md:mb-16">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-olive rounded-full flex items-center justify-center text-white">
-                <Leaf size={20} />
+            <div className="flex items-center gap-3 mb-4 md:mb-6">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-olive rounded-full flex items-center justify-center text-white">
+                <Leaf size={16} />
               </div>
-              <span className="text-[10px] font-sans font-black uppercase tracking-[0.4em] text-olive/60">
+              <span className="text-[8px] md:text-[10px] font-sans font-black uppercase tracking-[0.4em] text-olive/60">
                 Precision Agriculture
               </span>
             </div>
-            <h1 className="text-7xl md:text-9xl font-bold tracking-tighter leading-[0.85] text-sage-900">
+            <h1 className="text-5xl sm:text-7xl md:text-9xl font-bold tracking-tighter leading-[0.85] text-sage-900">
               Agri<span className="text-olive/20 italic font-light">Smart</span><br />
               <span className="text-olive">Kerala</span>
             </h1>
@@ -134,30 +182,30 @@ export default function App() {
             transition={{ delay: 0.3, duration: 1 }}
             className="max-w-md"
           >
-            <p className="text-xl text-sage-900/60 font-serif leading-relaxed italic mb-8">
+            <p className="text-lg md:text-xl text-sage-900/60 font-serif leading-relaxed italic mb-6 md:mb-8">
               "Empowering the hands that feed us with the intelligence of tomorrow."
             </p>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/50 backdrop-blur-sm rounded-full border border-olive/5 shadow-sm">
-                <Globe size={14} className="text-olive" />
-                <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-olive/60">Geo-Spatial</span>
+            <div className="flex flex-wrap gap-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/50 backdrop-blur-sm rounded-full border border-olive/5 shadow-sm">
+                <Globe size={12} className="text-olive" />
+                <span className="text-[8px] md:text-[10px] font-sans font-bold uppercase tracking-widest text-olive/60">Geo-Spatial</span>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/50 backdrop-blur-sm rounded-full border border-olive/5 shadow-sm">
-                <Info size={14} className="text-olive" />
-                <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-olive/60">Real-Time</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/50 backdrop-blur-sm rounded-full border border-olive/5 shadow-sm">
+                <Info size={12} className="text-olive" />
+                <span className="text-[8px] md:text-[10px] font-sans font-bold uppercase tracking-widest text-olive/60">Real-Time</span>
               </div>
             </div>
           </motion.div>
         </div>
       </header>
 
-      <main className="relative z-10 flex-1 px-6 pb-12 md:px-12 max-w-[1600px] mx-auto w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 h-full min-h-[700px]">
+      <main className="relative z-10 flex-1 px-4 pb-8 md:px-12 max-w-[1600px] mx-auto w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10 h-full min-h-[500px] md:min-h-[700px]">
           <motion.div 
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-            className="lg:col-span-7 xl:col-span-8 h-[600px] lg:h-full"
+            className="lg:col-span-7 xl:col-span-8 h-[400px] sm:h-[500px] lg:h-full"
           >
             <Map 
               onLocationSelect={getAdvice} 
@@ -173,7 +221,12 @@ export default function App() {
             transition={{ delay: 0.7, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
             className="lg:col-span-5 xl:col-span-4"
           >
-            <AIPanel data={advice} />
+            <AIPanel 
+              data={advice} 
+              onLearnMore={getCropDetails}
+              cropDetails={cropDetails}
+              onCloseDetails={() => setCropDetails({ loading: false, data: null, error: null })}
+            />
           </motion.div>
         </div>
       </main>

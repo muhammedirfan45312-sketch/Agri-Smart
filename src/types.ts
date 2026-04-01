@@ -3,6 +3,16 @@ export interface CropSuggestion {
   reason: string;
 }
 
+export interface DetailedCropInfo {
+  name: string;
+  plantingSeason: string;
+  waterRequirements: string;
+  fertilizerNeeds: string;
+  commonPests: string;
+  harvestTime: string;
+  marketDemand: string;
+}
+
 export interface StructuredAdvice {
   soilAndTerrain: string;
   recommendedCrops: CropSuggestion[];
