@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, Circle, OverlayView } from '@react-google-maps/api';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings2, Layers, Map as MapIcon, Satellite, Mountain, Droplets, Shovel } from 'lucide-react';
+import { Settings2, Layers, Map as MapIcon, Satellite, Mountain, Droplets, Shovel, X } from 'lucide-react';
 import { SOIL_STYLE, RAINFALL_STYLE, DEFAULT_STYLE, KERALA_CENTER } from '../constants';
 
 const containerStyle = {
@@ -11,12 +11,13 @@ const containerStyle = {
 
 interface MapProps {
   onLocationSelect: (lat: number, lng: number) => void;
+  onDeselect: () => void;
   selectedLocation: { lat: number, lng: number } | null;
   radius: number;
   onRadiusChange: (radius: number) => void;
 }
 
-const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation, radius, onRadiusChange }) => {
+const Map: React.FC<MapProps> = ({ onLocationSelect, onDeselect, selectedLocation, radius, onRadiusChange }) => {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyD84Egptlb3r4xYDxHvxgJ7sX3Smb7LV74"
@@ -28,6 +29,7 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation, radius, o
   const [showLayers, setShowLayers] = useState(false);
   const [mapType, setMapType] = useState<string>('roadmap');
   const [activeOverlay, setActiveOverlay] = useState<'none' | 'soil' | 'rainfall'>('none');
+  const [isControlsExpanded, setIsControlsExpanded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -128,26 +130,45 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation, radius, o
               position={selectedLocation}
               mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
             >
-              <motion.div
-                animate={{ 
-                  opacity: [0, 0.5, 0], 
-                  scale: [0.8, 1.5],
-                }}
-                transition={{ 
-                  duration: 2, 
-                  repeat: Infinity, 
-                  ease: "easeOut" 
-                }}
-                style={{
-                  width: 60,
-                  height: 60,
-                  marginLeft: -30,
-                  marginTop: -30,
-                  borderRadius: '50%',
-                  border: '2px solid #5A5A40',
-                  pointerEvents: 'none'
-                }}
-              />
+              <div className="relative">
+                {/* Pulse Ring */}
+                <motion.div
+                  animate={{ 
+                    opacity: [0, 0.5, 0], 
+                    scale: [0.8, 1.5],
+                  }}
+                  transition={{ 
+                    duration: 2, 
+                    repeat: Infinity, 
+                    ease: "easeOut" 
+                  }}
+                  style={{
+                    width: 60,
+                    height: 60,
+                    marginLeft: -30,
+                    marginTop: -30,
+                    borderRadius: '50%',
+                    border: '2px solid #5A5A40',
+                    pointerEvents: 'none'
+                  }}
+                />
+
+                {/* Deselect Button */}
+                <motion.button
+                  initial={{ opacity: 0, scale: 0, x: 20, y: -20 }}
+                  animate={{ opacity: 1, scale: 1, x: 30, y: -30 }}
+                  whileHover={{ scale: 1.1, backgroundColor: '#FEF2F2', color: '#DC2626' }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeselect();
+                  }}
+                  className="absolute top-0 left-0 w-8 h-8 bg-white rounded-full shadow-xl border border-olive/10 flex items-center justify-center text-olive transition-colors z-50"
+                  title="Deselect Plot"
+                >
+                  <X size={16} />
+                </motion.button>
+              </div>
             </OverlayView>
           </>
         )}
@@ -160,62 +181,79 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation, radius, o
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-6 left-6 right-6 md:left-auto md:right-6 md:bottom-6 z-20"
+            className="absolute bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 z-20"
           >
-            <div className="bg-white/95 backdrop-blur-xl p-4 md:p-5 rounded-[24px] border border-olive/10 shadow-2xl flex flex-col md:flex-row items-center gap-4 md:gap-8">
-              {/* Radius Control */}
-              <div className="w-full md:w-48">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-[9px] font-sans font-black text-olive/40 uppercase tracking-widest">Radius</span>
-                  <span className="text-sm font-serif font-bold text-sage-900">{radius}m</span>
+            <div className="flex flex-col items-end gap-3">
+              {/* Mobile Toggle Button */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsControlsExpanded(!isControlsExpanded)}
+                className="md:hidden bg-white/95 backdrop-blur-xl p-3 rounded-full border border-olive/10 shadow-xl text-olive flex items-center gap-2"
+              >
+                <Settings2 size={18} />
+                <span className="text-[10px] font-sans font-black uppercase tracking-widest">
+                  {isControlsExpanded ? 'Hide Controls' : 'Map Controls'}
+                </span>
+              </motion.button>
+
+              <motion.div 
+                animate={isControlsExpanded ? { height: 'auto', opacity: 1, scale: 1 } : { height: 0, opacity: 0, scale: 0.95 }}
+                className={`bg-white/95 backdrop-blur-xl p-4 md:p-5 rounded-[24px] border border-olive/10 shadow-2xl flex flex-col md:flex-row items-center gap-4 md:gap-8 overflow-hidden md:!h-auto md:!opacity-100 md:!scale-100 w-full md:w-auto`}
+              >
+                {/* Radius Control */}
+                <div className="w-full md:w-48">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-[9px] font-sans font-black text-olive/40 uppercase tracking-widest">Radius</span>
+                    <span className="text-sm font-serif font-bold text-sage-900">{radius}m</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="100"
+                    max="5000"
+                    step="100"
+                    value={radius}
+                    onChange={(e) => onRadiusChange(Number(e.target.value))}
+                    className="w-full h-1 bg-olive/10 rounded-full appearance-none cursor-pointer accent-olive"
+                  />
                 </div>
-                <input
-                  type="range"
-                  min="100"
-                  max="5000"
-                  step="100"
-                  value={radius}
-                  onChange={(e) => onRadiusChange(Number(e.target.value))}
-                  className="w-full h-1 bg-olive/10 rounded-full appearance-none cursor-pointer accent-olive"
-                />
-              </div>
 
-              <div className="hidden md:block w-px h-8 bg-olive/10" />
+                <div className="hidden md:block w-px h-8 bg-olive/10" />
 
-              {/* Layer Toggle */}
-              <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 no-scrollbar">
-                <LayerButton 
-                  active={mapType === 'roadmap' && activeOverlay === 'none'} 
-                  onClick={() => { setMapType('roadmap'); setActiveOverlay('none'); }}
-                  icon={<MapIcon size={14} />}
-                  label="Street"
-                />
-                <LayerButton 
-                  active={mapType === 'satellite'} 
-                  onClick={() => { setMapType('satellite'); setActiveOverlay('none'); }}
-                  icon={<Satellite size={14} />}
-                  label="Satellite"
-                />
-                <LayerButton 
-                  active={mapType === 'terrain'} 
-                  onClick={() => { setMapType('terrain'); setActiveOverlay('none'); }}
-                  icon={<Mountain size={14} />}
-                  label="Terrain"
-                />
-                <div className="w-px h-6 bg-olive/10 mx-1" />
-                <LayerButton 
-                  active={activeOverlay === 'soil'} 
-                  onClick={() => { setMapType('roadmap'); setActiveOverlay(activeOverlay === 'soil' ? 'none' : 'soil'); }}
-                  icon={<Shovel size={14} />}
-                  label="Soil"
-                />
-                <LayerButton 
-                  active={activeOverlay === 'rainfall'} 
-                  onClick={() => { setMapType('roadmap'); setActiveOverlay(activeOverlay === 'rainfall' ? 'none' : 'rainfall'); }}
-                  icon={<Droplets size={14} />}
-                  label="Rain"
-                />
-              </div>
+                {/* Layer Toggle */}
+                <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+                  <LayerButton 
+                    active={mapType === 'roadmap' && activeOverlay === 'none'} 
+                    onClick={() => { setMapType('roadmap'); setActiveOverlay('none'); }}
+                    icon={<MapIcon size={14} />}
+                    label="Street"
+                  />
+                  <LayerButton 
+                    active={mapType === 'satellite'} 
+                    onClick={() => { setMapType('satellite'); setActiveOverlay('none'); }}
+                    icon={<Satellite size={14} />}
+                    label="Satellite"
+                  />
+                  <LayerButton 
+                    active={mapType === 'terrain'} 
+                    onClick={() => { setMapType('terrain'); setActiveOverlay('none'); }}
+                    icon={<Mountain size={14} />}
+                    label="Terrain"
+                  />
+                  <div className="w-px h-6 bg-olive/10 mx-1" />
+                  <LayerButton 
+                    active={activeOverlay === 'soil'} 
+                    onClick={() => { setMapType('roadmap'); setActiveOverlay(activeOverlay === 'soil' ? 'none' : 'soil'); }}
+                    icon={<Shovel size={14} />}
+                    label="Soil"
+                  />
+                  <LayerButton 
+                    active={activeOverlay === 'rainfall'} 
+                    onClick={() => { setMapType('roadmap'); setActiveOverlay(activeOverlay === 'rainfall' ? 'none' : 'rainfall'); }}
+                    icon={<Droplets size={14} />}
+                    label="Rain"
+                  />
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         )}
@@ -236,9 +274,16 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation, radius, o
               zIndex: 9999
             }}
           >
-            <div className="bg-sage-900/90 text-white text-[8px] font-sans font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full backdrop-blur-md shadow-xl border border-white/10">
-              Analyze Plot
-            </div>
+            <motion.div 
+              animate={selectedLocation ? {
+                scale: [1, 1.05, 1],
+                backgroundColor: ['rgba(20, 20, 20, 0.9)', 'rgba(90, 90, 64, 0.95)', 'rgba(20, 20, 20, 0.9)'],
+              } : {}}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="bg-sage-900/90 text-white text-[8px] font-sans font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full backdrop-blur-md shadow-xl border border-white/10"
+            >
+              {selectedLocation ? 'Re-analyze Plot' : 'Analyze Plot'}
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

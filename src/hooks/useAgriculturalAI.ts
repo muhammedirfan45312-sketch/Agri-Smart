@@ -185,6 +185,16 @@ export const useAgriculturalAI = () => {
     }
   }, []);
 
+  const resetAdvice = useCallback(() => {
+    setAdvice({
+      lat: 0,
+      lng: 0,
+      advice: null,
+      loading: false,
+      error: null
+    });
+  }, []);
+
   const resetCropDetails = useCallback(() => {
     setCropDetails({ loading: false, data: null, error: null });
   }, []);
@@ -194,6 +204,7 @@ export const useAgriculturalAI = () => {
     cropDetails,
     getAdvice,
     getCropDetails,
+    resetAdvice,
     resetCropDetails
   };
 };

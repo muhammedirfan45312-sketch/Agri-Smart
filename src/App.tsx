@@ -7,7 +7,7 @@ import { Leaf, Globe, Info } from 'lucide-react';
 
 export default function App() {
   const [radius, setRadius] = useState(500);
-  const { advice, cropDetails, getAdvice, getCropDetails, resetCropDetails } = useAgriculturalAI();
+  const { advice, cropDetails, getAdvice, getCropDetails, resetAdvice, resetCropDetails } = useAgriculturalAI();
 
   const handleLocationSelect = useCallback((lat: number, lng: number) => {
     getAdvice(lat, lng, radius);
@@ -21,22 +21,22 @@ export default function App() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-olive/5 rounded-full blur-[120px]" />
       </div>
 
-      <header className="relative z-10 px-6 pt-8 md:px-12 md:pt-12 max-w-[1600px] mx-auto w-full">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-12">
+      <header className="relative z-10 px-4 pt-6 md:px-12 md:pt-12 max-w-[1600px] mx-auto w-full">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 md:mb-12">
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 bg-olive/10 rounded-full flex items-center justify-center text-olive">
-                <Leaf size={12} />
+            <div className="flex items-center gap-2 mb-2 md:mb-3">
+              <div className="w-5 h-5 md:w-6 md:h-6 bg-olive/10 rounded-full flex items-center justify-center text-olive">
+                <Leaf size={10} className="md:w-3 md:h-3" />
               </div>
-              <span className="text-[8px] font-sans font-black uppercase tracking-[0.3em] text-olive/40">
+              <span className="text-[7px] md:text-[8px] font-sans font-black uppercase tracking-[0.3em] text-olive/40">
                 Precision Agriculture
               </span>
             </div>
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-none text-sage-900">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-none text-sage-900">
               AgriSmart <span className="text-olive/30 font-light italic">Kerala</span>
             </h1>
           </motion.div>
@@ -64,6 +64,7 @@ export default function App() {
           >
             <Map 
               onLocationSelect={handleLocationSelect} 
+              onDeselect={resetAdvice}
               selectedLocation={advice.lat ? { lat: advice.lat, lng: advice.lng } : null} 
               radius={radius}
               onRadiusChange={setRadius}
