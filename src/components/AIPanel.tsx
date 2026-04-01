@@ -14,32 +14,65 @@ interface AIPanelProps {
   onCloseDetails: () => void;
 }
 
+const DetailCard = React.memo(({ icon, title, value }: { icon: React.ReactNode, title: string, value: string }) => (
+  <div className="p-5 bg-white rounded-2xl border border-sage-100 flex gap-4">
+    <div className="w-10 h-10 rounded-xl bg-sage-50 flex items-center justify-center text-olive shrink-0">
+      {icon}
+    </div>
+    <div>
+      <p className="text-[10px] font-sans font-black text-olive/40 uppercase tracking-widest mb-1">{title}</p>
+      <p className="text-sm text-sage-900 font-medium leading-relaxed">{value}</p>
+    </div>
+  </div>
+));
+
+const RecommendedCropCard = React.memo(({ crop, onLearnMore, idx }: { crop: any, onLearnMore: (name: string) => void, idx: number }) => (
+  <motion.div 
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.1 * idx }}
+    className="p-4 bg-white/60 rounded-2xl border border-white/80 group hover:border-olive/20 transition-colors"
+  >
+    <div className="flex justify-between items-center mb-1">
+      <h4 className="text-sm font-bold text-sage-900 group-hover:text-olive transition-colors">{crop.name}</h4>
+      <button 
+        onClick={() => onLearnMore(crop.name)}
+        className="p-1.5 bg-olive/5 rounded-lg text-olive hover:bg-olive hover:text-white transition-all flex items-center gap-1.5 text-[8px] font-sans font-black uppercase tracking-widest"
+      >
+        Details
+        <ArrowRight size={10} />
+      </button>
+    </div>
+    <p className="text-[11px] text-sage-900/50 leading-relaxed">{crop.reason}</p>
+  </motion.div>
+));
+
 const AIPanel: React.FC<AIPanelProps> = ({ data, onLearnMore, cropDetails, onCloseDetails }) => {
   return (
     <div className="glass-panel rounded-[32px] md:rounded-[40px] p-6 md:p-8 h-full flex flex-col relative overflow-hidden">
       {/* Decorative background element */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-olive/5 rounded-full -mr-16 -mt-16 blur-2xl" />
       
-      <div className="flex items-center justify-between mb-6 md:mb-8 relative z-10">
-        <div className="flex items-center gap-3 md:gap-4">
-          <div className="w-10 h-10 md:w-14 md:h-14 bg-olive rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-lg shadow-olive/20 rotate-3">
-            <Sprout size={24} className="md:w-7 md:h-7" />
+      <div className="flex items-center justify-between mb-6 relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-olive/10 rounded-xl flex items-center justify-center text-olive shadow-sm">
+            <Sprout size={20} />
           </div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-sage-900">Insights</h2>
-            <p className="text-[8px] md:text-[10px] text-olive/60 uppercase tracking-[0.2em] font-sans font-bold">Kerala Agricultural AI</p>
+            <h2 className="text-xl font-bold tracking-tight text-sage-900">Insights</h2>
+            <p className="text-[8px] text-olive/40 uppercase tracking-[0.2em] font-sans font-bold">Kerala Agricultural AI</p>
           </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar relative z-10">
         {!data.lat ? (
-          <div className="h-full flex flex-col items-center justify-center text-center px-4 md:px-6">
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-sage-100 rounded-full flex items-center justify-center text-olive/20 mb-4 md:mb-6 animate-bounce">
-              <MapPin size={32} className="md:w-10 md:h-10" />
+          <div className="h-full flex flex-col items-center justify-center text-center px-6">
+            <div className="w-12 h-12 bg-olive/5 rounded-full flex items-center justify-center text-olive/20 mb-4">
+              <MapPin size={24} />
             </div>
-            <h3 className="text-xl md:text-2xl font-bold text-sage-900/40 mb-2 italic">Ready to Analyze</h3>
-            <p className="text-sage-900/30 font-sans text-xs md:text-sm max-w-[200px]">Select a plot on the map to generate localized farming strategies.</p>
+            <h3 className="text-lg font-bold text-sage-900/40 mb-1 italic">Ready to Analyze</h3>
+            <p className="text-sage-900/30 font-sans text-[10px] max-w-[180px] uppercase tracking-wider">Select a plot on the map to begin</p>
           </div>
         ) : data.loading ? (
           <div className="h-full flex flex-col items-center justify-center text-center">
@@ -63,63 +96,49 @@ const AIPanel: React.FC<AIPanelProps> = ({ data, onLearnMore, cropDetails, onClo
         ) : data.advice && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 space-y-6">
             {/* Header Info Card */}
-            <div className="p-5 bg-white/40 rounded-3xl border border-white/60 flex flex-col gap-4 group">
+            <div className="p-4 bg-white/40 rounded-2xl border border-white/60 flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-olive shadow-sm group-hover:scale-110 transition-transform">
-                    <MapPin size={18} />
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-olive shadow-sm">
+                    <MapPin size={14} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-sans font-bold text-olive/40 uppercase tracking-widest">Selected Coordinates</p>
-                    <p className="text-sm font-sans font-bold text-sage-900">
+                    <p className="text-[9px] font-sans font-bold text-olive/30 uppercase tracking-widest">Plot Location</p>
+                    <p className="text-xs font-sans font-bold text-sage-900">
                       {data.lat.toFixed(4)}°N, {data.lng.toFixed(4)}°E
                     </p>
                   </div>
                 </div>
-                <div className="text-[10px] font-sans font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                  LOCALIZED
+                <div className="text-[8px] font-sans font-black text-olive/40 border border-olive/10 px-2 py-0.5 rounded-full">
+                  KERALA
                 </div>
               </div>
 
               {data.weather && (
-                <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/60">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="flex items-center gap-2 text-olive/60">
-                      <Sun size={12} />
-                      <span className="text-[8px] font-sans font-black uppercase tracking-tighter">Temp</span>
-                    </div>
-                    <p className="text-sm font-sans font-bold text-sage-900">{data.weather.temperature}°C</p>
+                <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/60">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[8px] font-sans font-black uppercase tracking-tighter text-olive/30">Temp</span>
+                    <p className="text-xs font-sans font-bold text-sage-900">{data.weather.temperature}°C</p>
                   </div>
-                  <div className="flex flex-col items-center gap-1 border-x border-white/60">
-                    <div className="flex items-center gap-2 text-olive/60">
-                      <Droplets size={12} />
-                      <span className="text-[8px] font-sans font-black uppercase tracking-tighter">Humidity</span>
-                    </div>
-                    <p className="text-sm font-sans font-bold text-sage-900">{data.weather.humidity}%</p>
+                  <div className="flex flex-col items-center border-x border-white/60">
+                    <span className="text-[8px] font-sans font-black uppercase tracking-tighter text-olive/30">Humidity</span>
+                    <p className="text-xs font-sans font-bold text-sage-900">{data.weather.humidity}%</p>
                   </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="flex items-center gap-2 text-olive/60">
-                      <Wind size={12} />
-                      <span className="text-[8px] font-sans font-black uppercase tracking-tighter">Precip</span>
-                    </div>
-                    <p className="text-sm font-sans font-bold text-sage-900">{data.weather.precipitation}mm</p>
+                  <div className="flex flex-col items-center">
+                    <span className="text-[8px] font-sans font-black uppercase tracking-tighter text-olive/30">Rain</span>
+                    <p className="text-xs font-sans font-bold text-sage-900">{data.weather.precipitation}mm</p>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Suitability Score */}
-            <div className="p-4 md:p-6 bg-olive/5 rounded-2xl md:rounded-3xl border border-olive/10 flex items-center justify-between">
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-white flex items-center justify-center text-olive shadow-sm">
-                  <Gauge size={20} className="md:w-6 md:h-6" />
-                </div>
-                <div>
-                  <p className="text-[8px] md:text-[10px] font-sans font-black text-olive/40 uppercase tracking-widest">Suitability Score</p>
-                  <p className="text-xl md:text-2xl font-bold text-sage-900">Highly Productive</p>
-                </div>
+            {/* Suitability Score - Simplified */}
+            <div className="p-4 bg-olive/5 rounded-2xl border border-olive/10 flex items-center justify-between">
+              <div>
+                <p className="text-[9px] font-sans font-black text-olive/30 uppercase tracking-widest mb-0.5">Agricultural Suitability</p>
+                <p className="text-lg font-bold text-sage-900">Highly Productive</p>
               </div>
-              <div className="text-3xl md:text-4xl font-black text-olive/20">
+              <div className="text-2xl font-black text-olive/20">
                 {data.advice.suitabilityScore}%
               </div>
             </div>
@@ -143,25 +162,12 @@ const AIPanel: React.FC<AIPanelProps> = ({ data, onLearnMore, cropDetails, onClo
               </div>
               <div className="grid gap-2 md:gap-3">
                 {data.advice.recommendedCrops.map((crop, idx) => (
-                  <motion.div 
+                  <RecommendedCropCard 
                     key={idx}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * idx }}
-                    className="p-4 md:p-5 bg-white/60 rounded-2xl md:rounded-3xl border border-white/80 group hover:border-olive/20 transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-1">
-                      <h4 className="text-base md:text-lg font-bold text-sage-900 group-hover:text-olive transition-colors">{crop.name}</h4>
-                      <button 
-                        onClick={() => onLearnMore(crop.name)}
-                        className="p-1.5 md:p-2 bg-olive/5 rounded-lg md:rounded-xl text-olive hover:bg-olive hover:text-white transition-all flex items-center gap-1.5 md:gap-2 text-[8px] md:text-[10px] font-sans font-black uppercase tracking-widest"
-                      >
-                        Details
-                        <ArrowRight size={10} className="md:w-3 md:h-3" />
-                      </button>
-                    </div>
-                    <p className="text-xs md:text-sm text-sage-900/60 leading-relaxed">{crop.reason}</p>
-                  </motion.div>
+                    crop={crop}
+                    onLearnMore={onLearnMore}
+                    idx={idx}
+                  />
                 ))}
               </div>
             </div>
@@ -258,16 +264,4 @@ const AIPanel: React.FC<AIPanelProps> = ({ data, onLearnMore, cropDetails, onClo
   );
 };
 
-const DetailCard: React.FC<{ icon: React.ReactNode, title: string, value: string }> = ({ icon, title, value }) => (
-  <div className="p-5 bg-white rounded-2xl border border-sage-100 flex gap-4">
-    <div className="w-10 h-10 rounded-xl bg-sage-50 flex items-center justify-center text-olive shrink-0">
-      {icon}
-    </div>
-    <div>
-      <p className="text-[10px] font-sans font-black text-olive/40 uppercase tracking-widest mb-1">{title}</p>
-      <p className="text-sm text-sage-900 font-medium leading-relaxed">{value}</p>
-    </div>
-  </div>
-);
-
-export default AIPanel;
+export default React.memo(AIPanel);

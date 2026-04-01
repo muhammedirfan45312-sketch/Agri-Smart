@@ -1,151 +1,17 @@
-import { useState } from 'react';
-import { GoogleGenAI, Type } from "@google/genai";
+import { useState, useCallback } from 'react';
 import Map from './components/Map';
 import AIPanel from './components/AIPanel';
-import { FarmAdvice, StructuredAdvice, DetailedCropInfo } from './types';
-import { motion, AnimatePresence } from 'motion/react';
+import { useAgriculturalAI } from './hooks/useAgriculturalAI';
+import { motion } from 'motion/react';
 import { Leaf, Globe, Info } from 'lucide-react';
 
 export default function App() {
   const [radius, setRadius] = useState(500);
-  const [advice, setAdvice] = useState<FarmAdvice>({
-    lat: 0,
-    lng: 0,
-    advice: null,
-    loading: false,
-    error: null
-  });
+  const { advice, cropDetails, getAdvice, getCropDetails, resetCropDetails } = useAgriculturalAI();
 
-  const [cropDetails, setCropDetails] = useState<{
-    loading: boolean;
-    data: DetailedCropInfo | null;
-    error: string | null;
-  }>({
-    loading: false,
-    data: null,
-    error: null
-  });
-
-  const getAdvice = async (lat: number, lng: number) => {
-    setAdvice(prev => ({ ...prev, lat, lng, loading: true, error: null, weather: undefined }));
-
-    try {
-      // Fetch Weather Data first to include in AI prompt
-      const weatherRes = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,precipitation&timezone=auto`
-      ).then(res => res.json()).catch(() => null);
-
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const model = "gemini-3-flash-preview";
-      
-      const prompt = `Act as an expert Kerala agriculturalist. I am analyzing a farmable area at coordinates Latitude: ${lat}, Longitude: ${lng} in Kerala. 
-      The area being considered is a circle with a radius of ${radius} meters.
-      Current Local Weather:
-      - Temperature: ${weatherRes?.current?.temperature_2m}°C
-      - Humidity: ${weatherRes?.current?.relative_humidity_2m}%
-      - Precipitation: ${weatherRes?.current?.precipitation}mm
-      
-      Provide a detailed analysis of the location.`;
-
-      const response = await ai.models.generateContent({
-        model,
-        contents: [{ parts: [{ text: prompt }] }],
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              soilAndTerrain: {
-                type: Type.STRING,
-                description: "Description of the likely soil type and terrain."
-              },
-              recommendedCrops: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    reason: { type: Type.STRING }
-                  },
-                  required: ["name", "reason"]
-                },
-                description: "List of 2-3 best crops for this location."
-              },
-              expertTip: {
-                type: Type.STRING,
-                description: "One key expert tip for success in this area."
-              },
-              suitabilityScore: {
-                type: Type.INTEGER,
-                description: "A score from 0-100 representing the agricultural suitability of this plot."
-              }
-            },
-            required: ["soilAndTerrain", "recommendedCrops", "expertTip", "suitabilityScore"]
-          }
-        }
-      });
-
-      const structuredAdvice = JSON.parse(response.text) as StructuredAdvice;
-
-      const weather = weatherRes ? {
-        temperature: weatherRes.current.temperature_2m,
-        humidity: weatherRes.current.relative_humidity_2m,
-        precipitation: weatherRes.current.precipitation,
-      } : undefined;
-
-      setAdvice(prev => ({
-        ...prev,
-        advice: structuredAdvice,
-        loading: false,
-        weather
-      }));
-    } catch (err) {
-      console.error('Gemini Error:', err);
-      setAdvice(prev => ({
-        ...prev,
-        loading: false,
-        error: 'Failed to connect to the AI service. Please try again later.'
-      }));
-    }
-  };
-
-  const getCropDetails = async (cropName: string) => {
-    setCropDetails({ loading: true, data: null, error: null });
-
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const model = "gemini-3-flash-preview";
-      
-      const prompt = `Provide detailed agricultural information for the crop: ${cropName} in the context of Kerala, India.`;
-
-      const response = await ai.models.generateContent({
-        model,
-        contents: [{ parts: [{ text: prompt }] }],
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              name: { type: Type.STRING },
-              plantingSeason: { type: Type.STRING },
-              waterRequirements: { type: Type.STRING },
-              fertilizerNeeds: { type: Type.STRING },
-              commonPests: { type: Type.STRING },
-              harvestTime: { type: Type.STRING },
-              marketDemand: { type: Type.STRING }
-            },
-            required: ["name", "plantingSeason", "waterRequirements", "fertilizerNeeds", "commonPests", "harvestTime", "marketDemand"]
-          }
-        }
-      });
-
-      const details = JSON.parse(response.text) as DetailedCropInfo;
-      setCropDetails({ loading: false, data: details, error: null });
-    } catch (err) {
-      console.error('Gemini Error (Crop Details):', err);
-      setCropDetails({ loading: false, data: null, error: 'Failed to fetch crop details.' });
-    }
-  };
+  const handleLocationSelect = useCallback((lat: number, lng: number) => {
+    getAdvice(lat, lng, radius);
+  }, [getAdvice, radius]);
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -155,46 +21,35 @@ export default function App() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-olive/5 rounded-full blur-[120px]" />
       </div>
 
-      <header className="relative z-10 px-6 pt-8 md:px-12 md:pt-16 max-w-[1600px] mx-auto w-full">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 md:mb-16">
+      <header className="relative z-10 px-6 pt-8 md:px-12 md:pt-12 max-w-[1600px] mx-auto w-full">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-12">
           <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="flex items-center gap-3 mb-4 md:mb-6">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-olive rounded-full flex items-center justify-center text-white">
-                <Leaf size={16} />
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 bg-olive/10 rounded-full flex items-center justify-center text-olive">
+                <Leaf size={12} />
               </div>
-              <span className="text-[8px] md:text-[10px] font-sans font-black uppercase tracking-[0.4em] text-olive/60">
+              <span className="text-[8px] font-sans font-black uppercase tracking-[0.3em] text-olive/40">
                 Precision Agriculture
               </span>
             </div>
-            <h1 className="text-5xl sm:text-7xl md:text-9xl font-bold tracking-tighter leading-[0.85] text-sage-900">
-              Agri<span className="text-olive/20 italic font-light">Smart</span><br />
-              <span className="text-olive">Kerala</span>
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-none text-sage-900">
+              AgriSmart <span className="text-olive/30 font-light italic">Kerala</span>
             </h1>
           </motion.div>
 
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 1 }}
-            className="max-w-md"
+            className="hidden md:block max-w-xs"
           >
-            <p className="text-lg md:text-xl text-sage-900/60 font-serif leading-relaxed italic mb-6 md:mb-8">
-              "Empowering the hands that feed us with the intelligence of tomorrow."
+            <p className="text-sm text-sage-900/40 font-serif italic leading-relaxed">
+              Empowering Kerala's farmers with localized, AI-driven soil and crop intelligence.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/50 backdrop-blur-sm rounded-full border border-olive/5 shadow-sm">
-                <Globe size={12} className="text-olive" />
-                <span className="text-[8px] md:text-[10px] font-sans font-bold uppercase tracking-widest text-olive/60">Geo-Spatial</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/50 backdrop-blur-sm rounded-full border border-olive/5 shadow-sm">
-                <Info size={12} className="text-olive" />
-                <span className="text-[8px] md:text-[10px] font-sans font-bold uppercase tracking-widest text-olive/60">Real-Time</span>
-              </div>
-            </div>
           </motion.div>
         </div>
       </header>
@@ -208,7 +63,7 @@ export default function App() {
             className="lg:col-span-7 xl:col-span-8 h-[400px] sm:h-[500px] lg:h-full"
           >
             <Map 
-              onLocationSelect={getAdvice} 
+              onLocationSelect={handleLocationSelect} 
               selectedLocation={advice.lat ? { lat: advice.lat, lng: advice.lng } : null} 
               radius={radius}
               onRadiusChange={setRadius}
@@ -225,7 +80,7 @@ export default function App() {
               data={advice} 
               onLearnMore={getCropDetails}
               cropDetails={cropDetails}
-              onCloseDetails={() => setCropDetails({ loading: false, data: null, error: null })}
+              onCloseDetails={resetCropDetails}
             />
           </motion.div>
         </div>

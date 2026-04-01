@@ -1,41 +1,13 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, Circle } from '@react-google-maps/api';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { GoogleMap, useJsApiLoader, Marker, Circle, OverlayView } from '@react-google-maps/api';
 import { motion, AnimatePresence } from 'motion/react';
 import { Settings2, Layers, Map as MapIcon, Satellite, Mountain, Droplets, Shovel } from 'lucide-react';
+import { SOIL_STYLE, RAINFALL_STYLE, DEFAULT_STYLE, KERALA_CENTER } from '../constants';
 
 const containerStyle = {
   width: '100%',
   height: '100%'
 };
-
-const center = {
-  lat: 10.8505,
-  lng: 76.2711
-};
-
-const SOIL_STYLE = [
-  { featureType: "all", elementType: "geometry", stylers: [{ color: "#3d2b1f" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#1a1a1a" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#5c4033" }] },
-  { featureType: "poi", stylers: [{ visibility: "off" }] },
-  { featureType: "road", stylers: [{ visibility: "simplified" }, { color: "#8b4513" }] }
-];
-
-const RAINFALL_STYLE = [
-  { featureType: "all", elementType: "geometry", stylers: [{ color: "#001f3f" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0074d9" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#003366" }] },
-  { featureType: "road", stylers: [{ color: "#001a33" }] }
-];
-
-const DEFAULT_STYLE = [
-  { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#5A5A40" }] },
-  { featureType: "landscape", elementType: "all", stylers: [{ color: "#f1f3f1" }] },
-  { featureType: "water", elementType: "all", stylers: [{ color: "#cbd5cb" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
-  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#e2e8e2" }] },
-  { featureType: "administrative", elementType: "labels.text.fill", stylers: [{ color: "#2d332d" }] }
-];
 
 interface MapProps {
   onLocationSelect: (lat: number, lng: number) => void;
@@ -47,7 +19,7 @@ interface MapProps {
 const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation, radius, onRadiusChange }) => {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: "AIzaSyD84Egptlb3r4xYDxHvxgJ7sX3Smb7LV74"
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyD84Egptlb3r4xYDxHvxgJ7sX3Smb7LV74"
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -91,6 +63,24 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation, radius, o
     });
   };
 
+  const mapOptions = useMemo(() => ({
+    disableDefaultUI: true,
+    zoomControl: true,
+    mapTypeControl: false,
+    styles: DEFAULT_STYLE
+  }), []);
+
+  const circleOptions = useMemo(() => ({
+    fillColor: "#5A5A40",
+    fillOpacity: 0.2,
+    strokeColor: "#5A5A40",
+    strokeOpacity: 0.5,
+    strokeWeight: 2,
+    clickable: false,
+    editable: false,
+    zIndex: 1
+  }), []);
+
   return isLoaded ? (
     <div 
       ref={containerRef}
@@ -99,22 +89,29 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation, radius, o
       onMouseLeave={() => setIsHovering(false)}
       className="w-full h-full rounded-[40px] overflow-hidden shadow-2xl shadow-olive/10 border-[12px] border-white relative group cursor-crosshair"
     >
-      <div className="absolute inset-0 border border-olive/5 rounded-[28px] pointer-events-none z-10" />
+      <motion.div 
+        animate={isHovering ? {
+          boxShadow: [
+            'inset 0 0 0 1px rgba(90, 90, 64, 0.1)',
+            'inset 0 0 0 4px rgba(90, 90, 64, 0.15)',
+            'inset 0 0 0 1px rgba(90, 90, 64, 0.1)'
+          ]
+        } : {
+          boxShadow: 'inset 0 0 0 1px rgba(90, 90, 64, 0.05)'
+        }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute inset-0 rounded-[28px] pointer-events-none z-10" 
+      />
       
       <GoogleMap
         mapContainerStyle={containerStyle}
-        center={selectedLocation || center}
+        center={selectedLocation || KERALA_CENTER}
         zoom={7}
         mapTypeId={mapType}
         onLoad={onLoad}
         onUnmount={onUnmount}
         onClick={onClick}
-        options={{
-          disableDefaultUI: true,
-          zoomControl: true,
-          mapTypeControl: false,
-          styles: DEFAULT_STYLE
-        }}
+        options={mapOptions}
       >
         {selectedLocation && (
           <>
@@ -125,44 +122,53 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation, radius, o
             <Circle
               center={selectedLocation}
               radius={radius}
-              options={{
-                fillColor: "#5A5A40",
-                fillOpacity: 0.2,
-                strokeColor: "#5A5A40",
-                strokeOpacity: 0.5,
-                strokeWeight: 2,
-                clickable: false,
-                editable: false,
-                zIndex: 1
-              }}
+              options={circleOptions}
             />
+            <OverlayView
+              position={selectedLocation}
+              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            >
+              <motion.div
+                animate={{ 
+                  opacity: [0, 0.5, 0], 
+                  scale: [0.8, 1.5],
+                }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Infinity, 
+                  ease: "easeOut" 
+                }}
+                style={{
+                  width: 60,
+                  height: 60,
+                  marginLeft: -30,
+                  marginTop: -30,
+                  borderRadius: '50%',
+                  border: '2px solid #5A5A40',
+                  pointerEvents: 'none'
+                }}
+              />
+            </OverlayView>
           </>
         )}
       </GoogleMap>
 
-      {/* Radius Control UI */}
+      {/* Consolidated Map Controls */}
       <AnimatePresence>
         {selectedLocation && (
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="absolute top-4 left-4 md:top-6 md:left-6 z-20 flex flex-col gap-3 md:gap-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-6 left-6 right-6 md:left-auto md:right-6 md:bottom-6 z-20"
           >
-            <div className="bg-white/90 backdrop-blur-md p-4 md:p-6 rounded-[24px] md:rounded-[32px] border border-olive/10 shadow-xl w-56 md:w-64">
-              <div className="flex items-center gap-3 mb-3 md:mb-4">
-                <Settings2 size={14} className="text-olive" />
-                <h3 className="text-[8px] md:text-[10px] font-sans font-black text-olive uppercase tracking-widest">
-                  Farmable Area
-                </h3>
-              </div>
-              
-              <div className="space-y-3 md:space-y-4">
-                <div className="flex justify-between items-end">
-                  <span className="text-[8px] md:text-[10px] font-sans font-bold text-olive/40 uppercase tracking-wider">Radius</span>
-                  <span className="text-base md:text-lg font-serif font-bold text-sage-900">{radius}m</span>
+            <div className="bg-white/95 backdrop-blur-xl p-4 md:p-5 rounded-[24px] border border-olive/10 shadow-2xl flex flex-col md:flex-row items-center gap-4 md:gap-8">
+              {/* Radius Control */}
+              <div className="w-full md:w-48">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[9px] font-sans font-black text-olive/40 uppercase tracking-widest">Radius</span>
+                  <span className="text-sm font-serif font-bold text-sage-900">{radius}m</span>
                 </div>
-                
                 <input
                   type="range"
                   min="100"
@@ -172,151 +178,111 @@ const Map: React.FC<MapProps> = ({ onLocationSelect, selectedLocation, radius, o
                   onChange={(e) => onRadiusChange(Number(e.target.value))}
                   className="w-full h-1 bg-olive/10 rounded-full appearance-none cursor-pointer accent-olive"
                 />
-                
-                <div className="flex justify-between text-[7px] md:text-[8px] font-sans font-black text-olive/20 uppercase tracking-tighter">
-                  <span>100m</span>
-                  <span>5km</span>
-                </div>
               </div>
-            </div>
 
-            {/* Layer Controls */}
-            <div className="relative">
-              <button 
-                onClick={() => setShowLayers(!showLayers)}
-                className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center transition-all shadow-lg ${showLayers ? 'bg-olive text-white' : 'bg-white/90 text-olive hover:bg-white'}`}
-              >
-                <Layers size={18} />
-              </button>
+              <div className="hidden md:block w-px h-8 bg-olive/10" />
 
-              <AnimatePresence>
-                {showLayers && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9, x: -10 }}
-                    animate={{ opacity: 1, scale: 1, x: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, x: -10 }}
-                    className="absolute left-12 md:left-16 top-0 bg-white/90 backdrop-blur-md p-3 md:p-4 rounded-[24px] md:rounded-[32px] border border-olive/10 shadow-xl w-56 md:w-64 z-30"
-                  >
-                    <div className="space-y-4 md:space-y-6">
-                      <div>
-                        <h4 className="text-[8px] md:text-[9px] font-sans font-black text-olive/40 uppercase tracking-widest mb-2 md:mb-3">Map Type</h4>
-                        <div className="grid grid-cols-3 gap-2">
-                          <LayerButton 
-                            active={mapType === 'roadmap' && activeOverlay === 'none'} 
-                            onClick={() => {
-                              setMapType('roadmap');
-                              setActiveOverlay('none');
-                            }}
-                            icon={<MapIcon size={12} />}
-                            label="Street"
-                          />
-                          <LayerButton 
-                            active={mapType === 'satellite'} 
-                            onClick={() => {
-                              setMapType('satellite');
-                              setActiveOverlay('none');
-                            }}
-                            icon={<Satellite size={12} />}
-                            label="Satellite"
-                          />
-                          <LayerButton 
-                            active={mapType === 'terrain'} 
-                            onClick={() => {
-                              setMapType('terrain');
-                              setActiveOverlay('none');
-                            }}
-                            icon={<Mountain size={12} />}
-                            label="Terrain"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="text-[8px] md:text-[9px] font-sans font-black text-olive/40 uppercase tracking-widest mb-2 md:mb-3">Data Overlays</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          <LayerButton 
-                            active={activeOverlay === 'soil'} 
-                            onClick={() => {
-                              setMapType('roadmap');
-                              setActiveOverlay(activeOverlay === 'soil' ? 'none' : 'soil');
-                            }}
-                            icon={<Shovel size={12} />}
-                            label="Soil Map"
-                          />
-                          <LayerButton 
-                            active={activeOverlay === 'rainfall'} 
-                            onClick={() => {
-                              setMapType('roadmap');
-                              setActiveOverlay(activeOverlay === 'rainfall' ? 'none' : 'rainfall');
-                            }}
-                            icon={<Droplets size={12} />}
-                            label="Rainfall"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Layer Toggle */}
+              <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+                <LayerButton 
+                  active={mapType === 'roadmap' && activeOverlay === 'none'} 
+                  onClick={() => { setMapType('roadmap'); setActiveOverlay('none'); }}
+                  icon={<MapIcon size={14} />}
+                  label="Street"
+                />
+                <LayerButton 
+                  active={mapType === 'satellite'} 
+                  onClick={() => { setMapType('satellite'); setActiveOverlay('none'); }}
+                  icon={<Satellite size={14} />}
+                  label="Satellite"
+                />
+                <LayerButton 
+                  active={mapType === 'terrain'} 
+                  onClick={() => { setMapType('terrain'); setActiveOverlay('none'); }}
+                  icon={<Mountain size={14} />}
+                  label="Terrain"
+                />
+                <div className="w-px h-6 bg-olive/10 mx-1" />
+                <LayerButton 
+                  active={activeOverlay === 'soil'} 
+                  onClick={() => { setMapType('roadmap'); setActiveOverlay(activeOverlay === 'soil' ? 'none' : 'soil'); }}
+                  icon={<Shovel size={14} />}
+                  label="Soil"
+                />
+                <LayerButton 
+                  active={activeOverlay === 'rainfall'} 
+                  onClick={() => { setMapType('roadmap'); setActiveOverlay(activeOverlay === 'rainfall' ? 'none' : 'rainfall'); }}
+                  icon={<Droplets size={14} />}
+                  label="Rain"
+                />
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
       
-      {/* Pulsating Indicator Tooltip */}
+      {/* Smooth Cursor Tooltip */}
       <AnimatePresence>
         {isHovering && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
             style={{ 
               position: 'fixed', 
-              left: mousePos.clientX, 
-              top: mousePos.clientY, 
+              left: mousePos.clientX + 20, 
+              top: mousePos.clientY + 20, 
               pointerEvents: 'none',
-              zIndex: 9999,
-              transform: 'translate(-50%, -50%)' 
+              zIndex: 9999
             }}
-            className="flex items-center justify-center"
           >
-            {/* The Dot (Centered on cursor) */}
-            <div className="relative flex items-center justify-center">
-              <motion.div 
-                animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0, 0.3] }}
-                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                className="absolute w-6 h-6 bg-olive rounded-full"
-              />
-              <div className="w-2 h-2 bg-olive rounded-full border border-white shadow-lg relative z-10" />
+            <div className="bg-sage-900/90 text-white text-[8px] font-sans font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full backdrop-blur-md shadow-xl border border-white/10">
+              Analyze Plot
             </div>
-            
-            {/* The Text (Floating just above the dot) */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="absolute bottom-full mb-2 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-xl border border-olive/10 shadow-2xl whitespace-nowrap"
-            >
-              <p className="text-[8px] font-sans font-black text-olive uppercase tracking-[0.05em]">
-                Click for advice
-              </p>
-            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Map Overlay Controls Hint (Static) - Moved to Bottom Right to avoid search bar */}
-      <div className="absolute bottom-6 right-6 z-20 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-olive/10 shadow-sm opacity-40 group-hover:opacity-100 transition-opacity duration-500">
-        <p className="text-[10px] font-sans font-black text-olive/60 uppercase tracking-widest">
+      {/* Map Overlay Controls Hint (Static) */}
+      <div className="absolute top-6 right-6 z-20 bg-white/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 shadow-sm">
+        <p className="text-[8px] font-sans font-black text-olive/40 uppercase tracking-widest">
           Kerala Plot Analysis
         </p>
       </div>
     </div>
   ) : (
     <div className="w-full h-full flex items-center justify-center bg-sage-50 rounded-[40px] border border-olive/5">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-olive/10 border-t-olive rounded-full animate-spin" />
-        <p className="text-[10px] font-sans font-black text-olive/40 uppercase tracking-[0.3em]">Initializing Map Engine</p>
+      <div className="flex flex-col items-center gap-6">
+        <div className="flex gap-3">
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              animate={{
+                scale: [1, 1.4, 1],
+                opacity: [0.3, 1, 0.3],
+              }}
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                delay: i * 0.2,
+                ease: "easeInOut",
+              }}
+              className="w-3 h-3 bg-olive rounded-full shadow-sm shadow-olive/20"
+            />
+          ))}
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <p className="text-[10px] font-sans font-black text-olive/40 uppercase tracking-[0.3em]">
+            Initializing Map Engine
+          </p>
+          <div className="w-24 h-[1px] bg-olive/10 overflow-hidden rounded-full">
+            <motion.div 
+              animate={{ x: [-100, 100] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+              className="w-full h-full bg-olive/30"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
