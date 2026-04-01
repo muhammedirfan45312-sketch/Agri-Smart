@@ -1,5 +1,7 @@
 # Agri-Smart Kerala
 
+**🚀 Live Website:** [agri-smart-kerala-389481491506.us-west1.run.app](https://agri-smart-kerala-389481491506.us-west1.run.app)
+
 ## Problem Statement
 Farmers in Kerala often struggle with a lack of localized, data-driven agricultural advice. General farming guidelines frequently fail to account for the unique micro-climates, specific soil variations at a plot level, and the rapidly changing real-time weather conditions across the state. This information gap leads to sub-optimal crop selection, inefficient resource use, and lower yields for small-scale and commercial farmers alike.
 
@@ -47,7 +49,7 @@ The entire development lifecycle of **Agri-Smart Kerala** was powered by Google 
 ![Screenshot 2](./proof/screenshot2.png)
 
 ### Demo Video
-[Watch Demo](https://drive.google.com/file/d/your-video-id/view) *(Replace with your actual Google Drive link)*
+[Watch Demo](https://drive.google.com/file/d/10d2HCYUwCRnIUZzbMsPpk5arNW9QQwGY/view?usp=sharing)
 
 ## Installation Steps
 
